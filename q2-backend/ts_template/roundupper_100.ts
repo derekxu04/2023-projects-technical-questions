@@ -13,6 +13,12 @@ type spaceEntity =
     | { type: "space_animal", metadata: spaceAnimal, location: location };
 
 
+type spaceAnimalInfo = { 
+    type: "pig" | "cow" | "flying_burger",
+    location: location,
+}
+
+
 // === ADD YOUR CODE BELOW :D ===
 
 // === ExpressJS setup + Server setup ===
@@ -23,16 +29,41 @@ app.use(express.json())
 
 // the POST /entity endpoint adds an entity to your global space database
 app.post('/entity', (req, res) => {
+    const entities = req.body.entities;
 
-    // TODO: confirm the request is of the right type
-    // lassoSize not lassoLength
-    for (const entity of req.body.entities) {
-        const {lassoSize, ...otherProps} = entity.metadata;
+    if (!entities) {
+        res.status(404).json({ 'message': 'Entities not found' });
+        return;
+    }
 
-        const {metadata, ...other} = entity;
+    for (const entity of entities) {
+        if (entity.type === "space_cowboy") {
+            const newCowboy: spaceEntity = {
+                type: "space_cowboy",
+                metadata: {
+                    name: entity.metadata.name,
+                    lassoLength: entity.metadata.lassoSize,
+                },
+                location: {
+                    x: entity.location.x,
+                    y: entity.location.y,
+                },
+            };
 
-        const newEntity = {metadata: {lassoLength: lassoSize, ...otherProps}, ...other};
-        spaceDatabase.push(newEntity);
+            spaceDatabase.push(newCowboy);
+        } else if (entity.type === "space_animal") {
+            const newAnimal: spaceEntity = {
+                type: "space_animal",
+                metadata: {
+                    type: entity.metadata.type,
+                },
+                location: {
+                    x: entity.location.x,
+                    y: entity.location.y,
+                },
+            };
+            spaceDatabase.push(newAnimal);
+        }
     }
 
     res.status(200).json(spaceDatabase);
@@ -47,11 +78,9 @@ function isLassoable(cowboy: spaceEntity, animal: spaceEntity): Boolean {
         return false;
     }
     
-    // console.log(cowboy, animal)
     const squaredDist = Math.pow((cowboy.location.x - animal.location.x), 2) 
                         + Math.pow((cowboy.location.y - animal.location.y), 2);
 
-    // TODO: change lassoSize to lassoLength
     if (squaredDist <= Math.pow((cowboy.metadata.lassoLength), 2)) {
         return true;
     } else {
@@ -61,9 +90,14 @@ function isLassoable(cowboy: spaceEntity, animal: spaceEntity): Boolean {
 
 // lasooable returns all the space animals a space cowboy can lasso given their name
 app.get('/lassoable', (req, res) => {
-    const cowboy_name = req.body.cowboy_name;
-    let cowboy;
+    const cowboy_name: string = req.body.cowboy_name;
 
+    if (!cowboy_name) {
+        res.status(404).json({ 'message': 'Missing cowboy_name' });
+        return;
+    }
+
+    let cowboy: spaceEntity | undefined = undefined;
     for (const entity of spaceDatabase) {
         if (entity.type === "space_cowboy" && entity.metadata.name === cowboy_name) {
             cowboy = entity; 
@@ -71,20 +105,26 @@ app.get('/lassoable', (req, res) => {
     }
 
     if (!cowboy) {
-        res.status(404).json({"message": "Cowboy not found"});
-    } else {
-        // This type is not exactly what is defined in the spec...
-        const lassoableAnimals: spaceEntity[] = [];
-
-        for (const entity of spaceDatabase) {
-            if (isLassoable(cowboy, entity)) {
-                lassoableAnimals.push(entity);
-            }
-        }
-
-        res.status(200).json({cowboy, lassoableAnimals})
+        res.status(404).json({ 'message': 'Cowboy not found' });
+        return;
     }
 
+    // This type is not exactly what is defined in the spec...
+    const lassoableAnimals: spaceAnimalInfo[] = [];
+
+    for (const entity of spaceDatabase) {
+        if (isLassoable(cowboy, entity)) {
+            if (entity.type == "space_animal") {
+                const lassoableAnimalInfo: spaceAnimalInfo = {
+                    type: entity.metadata.type,
+                    location: entity.location,
+                }
+                lassoableAnimals.push(lassoableAnimalInfo);
+            }
+        }
+    }
+
+    res.status(200).json({ space_animals: lassoableAnimals });
 })
 
 app.listen(8080);
