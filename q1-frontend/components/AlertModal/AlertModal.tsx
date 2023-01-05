@@ -9,8 +9,6 @@ interface AlertModalProps {
 export default function AlertModal({contents, useContents}: AlertModalProps) {
   function onSubmitEvent(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // hint: the alert given is at (e.target as any).elements[0].value - ignore typescript being annoying
-    // console.log((e.target as any)[0].value);
 
     let newAlert = {
       alert: (e.target as any).elements[0].value,
@@ -18,10 +16,8 @@ export default function AlertModal({contents, useContents}: AlertModalProps) {
       updates: [],
     } 
 
-    let {...newContents} = contents;
+    let { ...newContents } = contents;
     newContents.rowContents.push(newAlert);
-
-    console.log(newContents);
 
     useContents(newContents);
   }
