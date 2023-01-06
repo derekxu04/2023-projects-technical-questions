@@ -22,7 +22,7 @@
 .updateContainer {
     display: flex;
     justify-content: space-between;
-    align-items: last baseline;
+    align-items: baseline;
 }
 
 .updateDate {
