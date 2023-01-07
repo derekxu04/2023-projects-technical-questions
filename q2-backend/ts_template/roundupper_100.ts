@@ -39,7 +39,7 @@ app.post("/entity", (req, res) => {
     spaceDatabase.push(entity);
   }
 
-  res.status(200).json(spaceDatabase);
+  res.status(200).json();
 });
 
 // isLassoable checks whether an animal is 'lassoable' by a cowboy
